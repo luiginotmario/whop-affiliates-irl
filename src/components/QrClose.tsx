@@ -34,7 +34,7 @@ export function QrClose({
         </Dialog.Description>
 
         <div className="my-5 flex justify-center">
-          <div className="rounded-3 bg-white p-3">
+          <div className="rounded-6 bg-white p-3">
             <Image
               src={qrDataUrl}
               alt="Your Whop partner referral QR code"

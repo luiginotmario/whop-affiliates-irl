@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const res = NextResponse.redirect(
     authorizeUrl({
       clientId: env.whopClientId(),
-      redirectUri: `${env.appUrl()}/api/auth/callback`,
+      redirectUri: env.redirectUri(),
       scope: env.oauthScope(),
       state,
       challenge,

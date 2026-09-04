@@ -12,6 +12,9 @@ export const env = {
   oauthScope: () =>
     process.env.WHOP_OAUTH_SCOPE ?? "openid profile partner:create",
   appUrl: () => process.env.APP_URL ?? "http://localhost:3001",
+  redirectUri: () =>
+    process.env.WHOP_REDIRECT_URI ??
+    `${process.env.APP_URL ?? "http://localhost:3001"}/oauth/callback`,
   firecrawl: () => process.env.FIRECRAWL_API_KEY ?? null,
   whopBaseUrl: () =>
     process.env.WHOP_API_BASE_URL ?? "https://api.whop.com/api/v1",

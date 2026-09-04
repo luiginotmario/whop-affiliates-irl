@@ -34,21 +34,31 @@ export type BusinessContext = z.infer<typeof BusinessContextSchema>;
 /** Exactly what the model must return. Kept small on purpose — this gets
  *  read off a phone screen while walking into a shop. */
 export const PitchSchema = z.object({
-  observation: z
+  opener: z
     .string()
-    .describe("One line naming what they currently run. Said out loud first."),
-  // Deliberately unbounded. A hard max here fails the whole request at parse
-  // time when the model returns one extra line; trimming for display is the
-  // caller's problem, not the schema's.
+    .describe(
+      "The first thing you say, spoken to the owner's face. Second person " +
+        '("You run...", "I saw you use..."). Never a third-person summary. ' +
+        "Max 15 words.",
+    ),
+  // Deliberately unbounded. A hard max fails the whole request at parse time
+  // when the model returns one extra line; trimming is the caller's problem.
   bullets: z.array(
     z.object({
-      say: z.string().describe("One sentence, spoken, under 20 words."),
-      because: z.string().describe("The Whop fact behind it. Not spoken aloud."),
+      say: z
+        .string()
+        .describe("What you say out loud. Max 12 words. One breath."),
+      proof: z
+        .string()
+        .describe(
+          "The Whop capability, as a 2-4 word label. Not a sentence. " +
+            'e.g. "195 countries", "Recurring billing", "Instant payouts".',
+        ),
     }),
   ),
   objection: z.object({
-    likely: z.string().describe("The objection this business will raise."),
-    answer: z.string().describe("One-sentence reply."),
+    likely: z.string().describe("The objection, max 10 words."),
+    answer: z.string().describe("Your reply, max 20 words. Spoken."),
   }),
 });
 export type Pitch = z.infer<typeof PitchSchema>;

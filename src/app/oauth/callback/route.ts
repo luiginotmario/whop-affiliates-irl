@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     const tokens = await exchangeCode({
       code,
       clientId: env.whopClientId(),
-      redirectUri: `${env.appUrl()}/api/auth/callback`,
+      redirectUri: env.redirectUri(),
       verifier: stored.verifier,
     });
 

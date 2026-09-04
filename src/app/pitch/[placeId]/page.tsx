@@ -57,8 +57,9 @@ async function Brief({ placeId }: { placeId: string }) {
               alt=""
               width={56}
               height={56}
-              className="size-14 shrink-0 rounded-3 object-cover"
+              className="size-14 shrink-0 rounded-6 object-cover"
               unoptimized
+              priority
             />
           ) : null}
           <div className="min-w-0">
@@ -81,32 +82,24 @@ async function Brief({ placeId }: { placeId: string }) {
         <Separator size="4" className="my-4" />
 
         <SectionLabel>Open with</SectionLabel>
-        <Text as="p" size="3" weight="medium" className="mt-2">
-          {pitch.observation}
+        <Text as="p" size="5" className="mt-2">
+          {pitch.opener}
         </Text>
 
         <Separator size="4" className="my-4" />
 
         <SectionLabel>What to say</SectionLabel>
-        <ol className="mt-2.5 flex flex-col gap-3.5">
-          {pitch.bullets.map((bullet, index) => (
-            <li key={index} className="flex gap-3">
-              <Text
-                size="2"
-                color="gray"
-                weight="medium"
-                className="mt-0.5 tabular-nums"
-              >
-                {index + 1}
+        {/* Three at most. Anyone reading this is standing in front of someone
+            and gets one glance per line. */}
+        <ol className="mt-3 flex flex-col gap-5">
+          {pitch.bullets.slice(0, 3).map((bullet, index) => (
+            <li key={index} className="flex flex-col items-start gap-2">
+              <Text as="div" size="5">
+                {bullet.say}
               </Text>
-              <div>
-                <Text as="div" size="3">
-                  {bullet.say}
-                </Text>
-                <Text as="div" size="1" color="gray" className="mt-1">
-                  {bullet.because}
-                </Text>
-              </div>
+              <Badge size="1" variant="soft" color="blue">
+                {bullet.proof}
+              </Badge>
             </li>
           ))}
         </ol>
@@ -115,9 +108,9 @@ async function Brief({ placeId }: { placeId: string }) {
 
         <SectionLabel>If they push back</SectionLabel>
         <Text as="div" size="2" color="gray" className="mt-2">
-          {pitch.objection.likely}
+          &ldquo;{pitch.objection.likely}&rdquo;
         </Text>
-        <Text as="div" size="3" className="mt-1">
+        <Text as="div" size="4" className="mt-2">
           {pitch.objection.answer}
         </Text>
       </Card>
