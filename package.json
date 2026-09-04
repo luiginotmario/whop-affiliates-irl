@@ -1,0 +1,33 @@
+{
+  "name": "whop-affiliates-irl",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "frosted-ui": "0.0.1-canary.77",
+    "lucide-react": "^1.41.0",
+    "next": "16.3.4",
+    "qrcode": "^1.5.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.5.5",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.4",
+    "postcss": "^8.5.28",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5"
+  },
+  "packageManager": "pnpm@10.13.1"
+}
