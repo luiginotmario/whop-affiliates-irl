@@ -76,15 +76,9 @@ async function Brief({ placeId }: { placeId: string }) {
 
         <Separator size="4" className="my-4" />
 
-        <SectionLabel>They&apos;re running</SectionLabel>
+        <SectionLabel>They&apos;re using</SectionLabel>
         <StackChips stack={context.stack} />
 
-        <Separator size="4" className="my-4" />
-
-        <SectionLabel>Open with</SectionLabel>
-        <Text as="p" size="5" className="mt-2">
-          {pitch.opener}
-        </Text>
 
         <Separator size="4" className="my-4" />
 

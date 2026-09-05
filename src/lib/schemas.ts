@@ -6,11 +6,15 @@ export const PlaceSchema = z.object({
   name: z.string(),
   address: z.string().nullable(),
   category: z.string().nullable(),
+  /** Machine type (e.g. "coffee_shop"), used to find true like-for-like rivals. */
+  primaryType: z.string().nullable(),
   website: z.string().nullable(),
   rating: z.number().nullable(),
   userRatingCount: z.number().nullable(),
   priceLevel: z.string().nullable(),
   photoUrl: z.string().nullable(),
+  lat: z.number().nullable(),
+  lng: z.number().nullable(),
 });
 export type Place = z.infer<typeof PlaceSchema>;
 
@@ -23,24 +27,32 @@ export const StackSchema = z.object({
 });
 export type Stack = z.infer<typeof StackSchema>;
 
+/** Where this business actually stands against the shops on its own street.
+ *  Every field is computed from Places results, never estimated. */
+export const MarketPositionSchema = z.object({
+  rivals: z.number(),
+  radiusMetres: z.number(),
+  betterReviewed: z.number(),
+  betterRated: z.number(),
+  topRival: z
+    .object({ name: z.string(), userRatingCount: z.number().nullable() })
+    .nullable(),
+  rivalsWithWebsite: z.number(),
+});
+export type MarketPosition = z.infer<typeof MarketPositionSchema>;
+
 /** The whole context bundle we hand to the model. */
 export const BusinessContextSchema = z.object({
   place: PlaceSchema,
   stack: StackSchema,
   siteSummary: z.string().nullable(),
+  market: MarketPositionSchema.nullable(),
 });
 export type BusinessContext = z.infer<typeof BusinessContextSchema>;
 
 /** Exactly what the model must return. Kept small on purpose — this gets
  *  read off a phone screen while walking into a shop. */
 export const PitchSchema = z.object({
-  opener: z
-    .string()
-    .describe(
-      "The first thing you say, spoken to the owner's face. Second person " +
-        '("You run...", "I saw you use..."). Never a third-person summary. ' +
-        "Max 15 words.",
-    ),
   // Deliberately unbounded. A hard max fails the whole request at parse time
   // when the model returns one extra line; trimming is the caller's problem.
   bullets: z.array(
