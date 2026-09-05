@@ -7,7 +7,7 @@ import { BackButton } from "@/components/BackButton";
 import { BuildingPitch } from "@/components/BuildingPitch";
 import { QrClose } from "@/components/QrClose";
 import { enrollAsPartner } from "@/lib/clients/whop";
-import { getAccessToken } from "@/lib/session";
+import { getOptionalUser } from "@/lib/session";
 import { SignInPrompt } from "@/components/SignInPrompt";
 import { buildBrief } from "@/lib/pitch";
 import type { Stack } from "@/lib/schemas";
@@ -29,13 +29,20 @@ export default async function PitchPage({
 }
 
 async function Brief({ placeId }: { placeId: string }) {
-  const accessToken = await getAccessToken();
+  const session = await getOptionalUser();
 
   // The brief is worth showing even to a signed-out user; only the close needs
   // an identity, so the sign-in ask sits where the QR would be.
+  // The brief must survive a partner failure — a missing QR is a degraded
+  // page, not a broken one.
   const [brief, partner] = await Promise.all([
     buildBrief(placeId),
-    accessToken ? enrollAsPartner(accessToken) : null,
+    session
+      ? enrollAsPartner(session.token).catch((error: unknown) => {
+          console.error("[scout] partner enrol failed:", error);
+          return null;
+        })
+      : null,
   ]);
   const { place, context, pitch } = brief;
   const qrDataUrl = partner
@@ -112,7 +119,7 @@ async function Brief({ placeId }: { placeId: string }) {
       {partner && qrDataUrl ? (
         <QrClose qrDataUrl={qrDataUrl} referralLink={partner.referral_link} />
       ) : (
-        <SignInPrompt next={`/pitch/${placeId}`} />
+        <SignInPrompt next={`/pitch/${placeId}`} signedIn={session !== null} />
       )}
     </div>
   );

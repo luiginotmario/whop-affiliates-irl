@@ -9,8 +9,11 @@ export const env = {
   openRouter: () => required("OPENROUTER_API_KEY"),
   whopClientId: () =>
     process.env.WHOP_CLIENT_ID ?? required("NEXT_PUBLIC_WHOP_APP_ID"),
+  // Every scope here must ALSO be declared on the app's Permissions tab —
+  // asking for one the app has not declared makes Whop reject the authorize.
   oauthScope: () =>
-    process.env.WHOP_OAUTH_SCOPE ?? "openid profile partner:create",
+    process.env.WHOP_OAUTH_SCOPE ??
+    "openid profile email partner:create partner:basic:read",
   appUrl: () => process.env.APP_URL ?? "http://localhost:3001",
   redirectUri: () =>
     process.env.WHOP_REDIRECT_URI ??
