@@ -78,8 +78,11 @@ async function Brief({ placeId }: { placeId: string }) {
                 {bullet.say}
               </Text>
               <Badge size="1" variant="soft" color="blue">
-                {bullet.proof}
+                {bullet.product}
               </Badge>
+              <Text as="div" size="2" color="gray">
+                {bullet.how}
+              </Text>
             </li>
           ))}
         </ol>

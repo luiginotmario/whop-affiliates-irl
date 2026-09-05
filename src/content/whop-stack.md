@@ -288,62 +288,101 @@ more. Quote the base rate as the base rate.
 
 ---
 
+## Product names — use these exactly
+
+Every bullet names the Whop product it maps to. Use these strings verbatim, so
+the owner can look them up and the salesperson learns the range.
+
+| Product | Covers |
+| --- | --- |
+| **Whop Payments** | Checkout, cards and wallets, 195 countries, financing |
+| **Whop Tap to Pay** | In-person contactless on iPhone, no terminal |
+| **Whop Tax** | Sales tax calculated and remitted |
+| **Whop Memberships** | Plans, subscriptions, pause/resume, free days |
+| **Whop Payouts** | Paying staff, contractors and suppliers from the balance |
+| **Whop Wallet** | Holding the balance, swaps, no external bank needed |
+| **Whop Cards** | Issued virtual cards that spend the balance |
+| **Whop Ads** | Meta campaigns on Whop's ad account, pixel attribution |
+| **Whop Affiliates** | Customers and creators paid to refer, refunds clawed back |
+| **Whop Connect** | Connected accounts, application fees, marketplace splits |
+| **Whop Verification** | KYC and KYB |
+| **Whop Company Formation** | LLC and C-Corp filing |
+| **Whop Marketplace** | Distribution — buyers who discover you on Whop |
+| **Whop Courses** | Course delivery gated on membership |
+| **Whop Chat** | Chat, DMs and forums gated on membership |
+
+Never invent a product name. If a line does not map to one of these, it is the
+wrong line.
+
+## The real argument: consolidation, not replacement
+
+Almost every local business runs five to eight tools and pays for all of them.
+They rarely count them out loud. Doing that for them is the pitch.
+
+A typical restaurant:
+
+| Job | Typical tool | Whop replaces it? |
+| --- | --- | --- |
+| Bookings, table management | Resy, OpenTable, SevenRooms | **No.** Leave it alone. |
+| Taking payment at the table | Toast, Square, Clover | **Yes** — Tap to Pay, no terminal |
+| Online / retail sales | Shopify, Squarespace | Partly — checkout, not the storefront |
+| Paying staff | Gusto, Rippling, ADP | **Yes** — payouts from the balance |
+| Paying suppliers | Bank transfer, cheque | **Yes** — transfers and issued cards |
+| Holding the money | Business bank account | **Yes** — the Whop balance |
+| Sales tax filing | Accountant, Avalara | **Yes** — calculated and remitted |
+| Bookkeeping | QuickBooks, Xero | **No.** |
+| Marketing / ads | Meta Ads Manager | **Yes** — Whop owns the ad account |
+
+A typical shop or salon is the same shape: booking tool, POS, payroll, bank,
+accountant, ads.
+
+**Say it as a count, not as a gap.** "You're paying a POS, a payroll tool and a
+bank separately. Those three are one account on Whop" is the line. It is a bill
+the owner already resents, and it does not require them to admit anything is
+broken.
+
+**Never argue that a tool fails at something outside its job.** "Resy can't pay
+your staff" is a category error — nobody bought Resy for payroll, and saying it
+tells the owner you do not understand their business. Resy is good at bookings.
+Say so, leave it running, and collapse the other three line items.
+
+**Be explicit about what stays.** "Keep Resy, keep your accountant" makes
+everything else you say credible. A pitch that replaces everything sounds like
+a pitch. A pitch that replaces three things sounds like a plan.
+
+**Most of their stack is invisible to us.** We can only detect what their
+website reveals. Payroll, banking and accounting never show up in a page
+scrape, and those are exactly the expensive ones. Reason about what a business
+of this type must be running, and say it as an assumption the owner can correct:
+"you're probably running payroll somewhere else" — not as a detected fact.
+
 ## How to reason about a business
 
-Do not pattern-match the category to a stock answer. Work out how this business
-actually takes money today, find the worst part of that, and name the Whop
-product that removes it.
+There is no category-to-answer lookup here on purpose. A restaurant does not
+automatically need Tap to Pay; a Shopify store does not automatically need
+affiliates. Reason it out every time.
 
-Ask, in order:
-1. **How do they get paid right now?** In person? A POS? Online only? Not at all?
-2. **What is that costing them** — hardware, a monthly fee, a settlement delay,
-   two sets of books, tax filing they do by hand?
-3. **Which single Whop capability removes that?** Lead with that one.
-4. **What would they buy second?** That is bullet two.
+Work in this order:
 
-Worked examples — note that none of them lead with "global payments":
+1. **Read INCUMBENT TOOLS first.** Live research on what they already run.
+   Anything it already does well is off the table — pitching a feature they
+   already pay for gets you dismissed in one sentence.
+2. **Count their whole stack, including what you cannot see.** Use the
+   consolidation table above. A restaurant on Resy is also running a POS,
+   payroll and a bank. Those are the expensive line items and they never appear
+   in a website scrape.
+3. **Find which line items collapse into one account.** Usually payments +
+   payouts + the bank. Sometimes ads and tax too.
+4. **Say what stays.** Name the tool they keep. That is what makes the rest
+   believable.
 
-- **Watch shop, high ticket, in person, Square terminal.** Lead with Tap to Pay:
-  the terminal disappears and the iPhone becomes the reader. Then financing —
-  Klarna and Afterpay matter enormously on a £3,000 watch and are the difference
-  between a sale and a maybe. Then the card: spend today's takings on stock
-  without waiting for settlement.
-- **Restaurant on Toast, bookings on Resy.** Tap to Pay for the counter and the
-  terrace, prepaid tasting-menu deposits as one-time plans, sales tax remitted
-  instead of filed by hand.
-- **Barber, cash and a card reader, Instagram-led.** Tap to Pay, memberships for
-  a monthly cut, and regulars as affiliates who get paid for referrals.
-- **Boutique on Shopify.** Never pitch replacing Shopify. Pitch the layer it has
-  no answer for: affiliate payouts, an issued card, marketplace discovery.
-- **Market stall, cash only.** Tap to Pay alone. No hardware, no wifi, no power.
-  Nothing else matters until they can take a card.
-- **Gym or studio on Mindbody.** Memberships with pause and resume — the single
-  most requested thing a gym cannot do well — plus in-person Tap to Pay.
+Three tests before you write a bullet:
 
-The test for a good bullet: could the owner disagree with the *fact*? If they
-could only disagree with the *opinion*, it is too vague.
-
-## Angle by business type
-
-Match on the Places category and the detected stack.
-
-- **Brick and mortar** — take in-person payments from the Whop iOS app: create a
-  checkout link, a QR appears, the customer scans and pays. Print it for
-  signage. Then give regulars a paid forum and a merch store.
-  *(https://docs.whop.com/supported-business-models/brick-and-mortar.md)*
-- **Runs Shopify / an online store** — do not pitch replacing it. Pitch the
-  layer Shopify has no answer for: affiliate payouts, an issued card that spends
-  the revenue, and marketplace distribution.
-- **Runs Square / Toast / Clover** — they own the register; Whop owns everything
-  after the sale. Recurring plans, referrals, and money that stays spendable.
-- **Takes bookings (Resy, Calendly, Mindbody)** — memberships and prepaid
-  packages billed automatically, with access tied to billing state.
-- **Instagram-led, no site** — checkout link in bio, followers become paid
-  affiliates, marketplace discovery.
-- **Coach, course, newsletter, paid community** — memberships plus courses plus
-  chat, gated on billing, in one place.
-
----
+- **Could they already do this?** If their current tool does it, delete it.
+- **Is this outside the incumbent's job?** "Resy can't pay staff" is a category
+  error. Reframe as a count of tools, not a failure of one.
+- **Could the owner disagree with the fact?** If they could only disagree with
+  an opinion, it is too vague to say.
 
 ## What not to say
 

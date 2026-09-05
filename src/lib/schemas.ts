@@ -47,6 +47,9 @@ export const BusinessContextSchema = z.object({
   stack: StackSchema,
   siteSummary: z.string().nullable(),
   market: MarketPositionSchema.nullable(),
+  /** Live web research on each detected tool, so the pitch argues against what
+   *  the incumbent actually is rather than what the model remembers. */
+  incumbents: z.array(z.string()),
 });
 export type BusinessContext = z.infer<typeof BusinessContextSchema>;
 
@@ -60,11 +63,19 @@ export const PitchSchema = z.object({
       say: z
         .string()
         .describe("What you say out loud. Max 12 words. One breath."),
-      proof: z
+      product: z
         .string()
         .describe(
-          "The Whop capability, as a 2-4 word label. Not a sentence. " +
-            'e.g. "195 countries", "Recurring billing", "Instant payouts".',
+          "The Whop product this line maps to, named exactly as in the " +
+            'knowledge base\'s product table. e.g. "Whop Payouts", ' +
+            '"Whop Tap to Pay", "Whop Ads". Never invent a name.',
+        ),
+      how: z
+        .string()
+        .describe(
+          "How that product actually works for THIS business and what it gets " +
+            "them. Max 25 words. Must contain a mechanism (what happens) and " +
+            "an outcome (what they gain). Never a vague benefit.",
         ),
     }),
   ),

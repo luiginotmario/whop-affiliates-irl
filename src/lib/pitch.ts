@@ -4,6 +4,7 @@ import { fetchSite } from "@/lib/clients/firecrawl";
 import { generatePitch } from "@/lib/clients/openrouter";
 import { detectStack } from "@/lib/detect/stack";
 import { marketPosition } from "@/lib/competitive";
+import { researchStack } from "@/lib/clients/research";
 import {
   StackSchema,
   type BusinessContext,
@@ -29,11 +30,18 @@ async function generateBrief(placeId: string): Promise<Brief> {
     marketPosition(place),
   ]);
 
+  const stack = site ? detectStack(site.html) : EMPTY_STACK;
+
+  // Research what they already run before arguing against it — otherwise the
+  // pitch offers them features their current tool already has.
+  const incumbents = await researchStack(Object.values(stack).flat());
+
   const context: BusinessContext = {
     place,
-    stack: site ? detectStack(site.html) : EMPTY_STACK,
+    stack,
     siteSummary: site?.text ?? null,
     market,
+    incumbents,
   };
 
   return { place, context, pitch: await generatePitch(context) };
@@ -43,7 +51,11 @@ async function generateBrief(placeId: string): Promise<Brief> {
  *  stable for a given business, so they are cached by place id. This also keeps
  *  the pitch identical when someone signs in and comes back mid-conversation —
  *  regenerating it would hand them different words to say. */
-export const buildBrief = unstable_cache(generateBrief, ["brief"], {
+/** Bump when the Pitch schema or prompt changes — a cached brief built against
+ *  an older shape renders blank fields rather than failing loudly. */
+const BRIEF_VERSION = "v3-how";
+
+export const buildBrief = unstable_cache(generateBrief, ["brief", BRIEF_VERSION], {
   revalidate: 60 * 60 * 24,
   tags: ["brief"],
 });

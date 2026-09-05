@@ -37,9 +37,38 @@ Rules:
   "we handle payouts".
 - Give exactly 3 bullets. Not 4, not 5. They will not get through more.
 - "say" is at most 12 words. One breath. No sub-clauses, no "could" pile-ups.
-- "proof" is a 2-4 word label, never a sentence: "Whop owns the ad account",
-  "Spend from your balance", "Refunds claw back".
+- "product" names the Whop product the line maps to, taken VERBATIM from the
+  product table in the knowledge base: "Whop Payouts", "Whop Tap to Pay",
+  "Whop Ads", "Whop Marketplace". Never invent a name, never describe a
+  capability there. Every bullet must map to a real product — including the
+  market-position one.
+- "how" is the part that earns the sale. The owner's question after every line
+  is "so what?" — answer it. Say what the product actually DOES and what this
+  specific business GETS. Name the mechanism, and a number where the knowledge
+  base gives you one.
+  Good: "Card taps land in your Whop balance at 2.6% + 10c, so there's no
+  terminal rental and no waiting on a POS payout cycle."
+  Good: "Whop runs the Meta campaigns on its own ad account, so there's no
+  Business Manager to set up and results are counted by Whop's pixel, not
+  Meta's."
+  Bad: "Helps you grow." / "Better payments." / "Reach more customers."
+  Never restate the bullet in different words — add the thing it left out.
 - Lead with what they already run. Never guess a tool that was not detected.
+- INCUMBENT TOOLS is live research on what they currently use. Read it before
+  writing anything. NEVER pitch a capability the incumbent already has — if
+  their booking tool already takes deposits, do not offer them deposits. That
+  is the fastest way to be dismissed.
+- Never trash the incumbent, and never argue it fails at something outside its
+  job. "Resy can't pay your staff" is a category error — nobody bought a
+  booking tool for payroll, and saying it tells the owner you do not understand
+  their business.
+- Argue CONSOLIDATION, not gaps. Count the tools they are paying for, including
+  the ones a website scrape cannot see (POS, payroll, bank, accountant), and
+  name which of them collapse into one Whop account.
+- Say which tool they KEEP. "Keep Resy" makes everything else credible.
+- Mark anything you inferred rather than detected as an assumption the owner can
+  correct: "you're probably running payroll somewhere else".
+- If the research names a real price they pay, that is fair to reference.
 - EXACTLY ONE of the three bullets MUST cite a number from MARKET POSITION.
   Those numbers were counted from live data and are safe to say verbatim.
   Make it the opening bullet — a specific fact about their own street is what
@@ -91,7 +120,7 @@ export async function generatePitch(ctx: BusinessContext): Promise<Pitch> {
 }
 
 function describe(ctx: BusinessContext): string {
-  const { place, stack, siteSummary, market } = ctx;
+  const { place, stack, siteSummary, market, incumbents } = ctx;
   return [
     `Business: ${place.name}`,
     place.category && `Category: ${place.category}`,
@@ -108,6 +137,10 @@ function describe(ctx: BusinessContext): string {
       )
         .map((l) => `- ${l}`)
         .join("\n")}`,
+    incumbents.length > 0 &&
+      `INCUMBENT TOOLS (researched live just now — trust this over anything you remember):\n${incumbents.join(
+        "\n\n",
+      )}`,
     siteSummary && `Site copy: ${siteSummary.slice(0, 1500)}`,
   ]
     .filter(Boolean)
