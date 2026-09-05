@@ -18,4 +18,9 @@ body {
   .scrollbar-none::-webkit-scrollbar {
     display: none;
   }
+
+  /* The last card must clear the iOS home indicator, not sit under it. */
+  .pb-safe {
+    padding-bottom: calc(2.5rem + env(safe-area-inset-bottom));
+  }
 }

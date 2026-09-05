@@ -103,7 +103,7 @@ export function Scout({ header }: { header: React.ReactNode }) {
         </div>
       </div>
 
-      <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6 pt-8">
+      <div className="scrollbar-none pb-safe min-h-0 flex-1 overflow-y-auto overscroll-contain pt-8">
         <Results
           places={places}
           status={status}

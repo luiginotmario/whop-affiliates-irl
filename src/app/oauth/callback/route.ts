@@ -39,12 +39,16 @@ export async function GET(request: Request) {
       verifier: stored.verifier,
     });
 
-    const { sub } = await fetchUserInfo(tokens.access_token);
+    const user = await fetchUserInfo(tokens.access_token);
 
     const res = NextResponse.redirect(`${env.appUrl()}${stored.returnTo}`);
     res.cookies.set(
       SESSION_COOKIE,
-      JSON.stringify({ userId: sub, token: tokens.access_token }),
+      JSON.stringify({
+        userId: user.sub,
+        token: tokens.access_token,
+        username: user.username ?? user.preferred_username ?? user.name ?? null,
+      }),
       {
         httpOnly: true,
         sameSite: "lax",

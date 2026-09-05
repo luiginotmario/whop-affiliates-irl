@@ -70,17 +70,20 @@ export async function exchangeCode(options: {
 }
 
 /** `sub` is the Whop user id (user_...). */
-export async function fetchUserInfo(accessToken: string): Promise<{
+export type UserInfo = {
   sub: string;
   name?: string;
   email?: string;
   username?: string;
-}> {
+  preferred_username?: string;
+};
+
+export async function fetchUserInfo(accessToken: string): Promise<UserInfo> {
   const res = await fetch(USERINFO_URL, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!res.ok) {
     throw new Error(`userinfo failed: ${res.status} ${await res.text()}`);
   }
-  return (await res.json()) as { sub: string };
+  return (await res.json()) as UserInfo;
 }

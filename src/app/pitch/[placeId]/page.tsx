@@ -1,14 +1,11 @@
 import Image from "next/image";
 import { Suspense } from "react";
 import { Badge, Card, Heading, Separator, Text } from "frosted-ui";
-import QRCode from "qrcode";
 import { SectionLabel } from "@/components/SectionLabel";
 import { BackButton } from "@/components/BackButton";
 import { BuildingPitch } from "@/components/BuildingPitch";
-import { QrClose } from "@/components/QrClose";
-import { enrollAsPartner } from "@/lib/clients/whop";
-import { getOptionalUser } from "@/lib/session";
-import { SignInPrompt } from "@/components/SignInPrompt";
+import { Close } from "@/components/Close";
+import { AccountBar } from "@/components/AccountBar";
 import { buildBrief } from "@/lib/pitch";
 import type { Stack } from "@/lib/schemas";
 
@@ -20,41 +17,23 @@ export default async function PitchPage({
   const { placeId } = await params;
   return (
     // main is a fixed-height column, so this page owns its own scroll.
-    <div className="scrollbar-none flex h-full flex-col overflow-y-auto overscroll-contain py-6">
+    <div className="scrollbar-none pb-safe flex h-full flex-col gap-4 overflow-y-auto overscroll-contain pt-6">
       <Suspense fallback={<BuildingPitch />}>
         <Brief placeId={placeId} />
+      </Suspense>
+      <Suspense fallback={null}>
+        <Close next={`/pitch/${placeId}`} />
       </Suspense>
     </div>
   );
 }
 
 async function Brief({ placeId }: { placeId: string }) {
-  const session = await getOptionalUser();
-
-  // The brief is worth showing even to a signed-out user; only the close needs
-  // an identity, so the sign-in ask sits where the QR would be.
-  // The brief must survive a partner failure — a missing QR is a degraded
-  // page, not a broken one.
-  const [brief, partner] = await Promise.all([
-    buildBrief(placeId),
-    session
-      ? enrollAsPartner(session.token).catch((error: unknown) => {
-          console.error("[scout] partner enrol failed:", error);
-          return null;
-        })
-      : null,
-  ]);
-  const { place, context, pitch } = brief;
-  const qrDataUrl = partner
-    ? await QRCode.toDataURL(partner.referral_link, {
-        width: 480,
-        margin: 1,
-        errorCorrectionLevel: "M",
-      })
-    : null;
+  const { place, context, pitch } = await buildBrief(placeId);
 
   return (
     <div className="flex w-full flex-col gap-4">
+      <AccountBar />
       <BackButton href="/" />
       <Card size="3" variant="surface" className="w-full">
         <div className="flex items-center gap-3.5">
@@ -116,11 +95,6 @@ async function Brief({ placeId }: { placeId: string }) {
         </Text>
       </Card>
 
-      {partner && qrDataUrl ? (
-        <QrClose qrDataUrl={qrDataUrl} referralLink={partner.referral_link} />
-      ) : (
-        <SignInPrompt next={`/pitch/${placeId}`} signedIn={session !== null} />
-      )}
     </div>
   );
 }
