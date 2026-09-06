@@ -1,11 +1,18 @@
-import { Badge, Card, Heading, Separator, Text } from "frosted-ui";
+import { Badge, Card, Heading, Separator, Spinner, Text } from "frosted-ui";
 import Image from "next/image";
 import { SectionLabel } from "@/components/SectionLabel";
 import type { BusinessContext, Pitch, Place, Prospect, Stack } from "@/lib/schemas";
 
 export type Brief = { place: Place; context: BusinessContext; pitch: Pitch };
 
-export function PitchCard({ place, context, pitch }: Brief) {
+/** `pitch.bullets` may be partial while streaming; everything rendered from it
+ *  is already complete, so no placeholder states are needed. */
+export function PitchCard({
+  place,
+  context,
+  pitch,
+  streaming = false,
+}: Brief & { streaming?: boolean }) {
   return (
     <Card size="3" variant="surface" className="w-full">
       <div className="flex items-center gap-3.5">
@@ -67,6 +74,8 @@ export function PitchCard({ place, context, pitch }: Brief) {
 
       <Separator size="4" className="my-4" />
 
+      {pitch.objection.likely ? (
+        <>
       <SectionLabel>If they push back</SectionLabel>
       <Text as="div" size="2" color="gray" className="mt-2">
         &ldquo;{pitch.objection.likely}&rdquo;
@@ -74,6 +83,17 @@ export function PitchCard({ place, context, pitch }: Brief) {
       <Text as="div" size="4" className="mt-2">
         {pitch.objection.answer}
       </Text>
+        </>
+      ) : null}
+
+      {streaming ? (
+        <div className="mt-4 flex items-center gap-2">
+          <Spinner size="1" />
+          <Text size="1" color="gray">
+            Still writing
+          </Text>
+        </div>
+      ) : null}
     </Card>
   );
 }

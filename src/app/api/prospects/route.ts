@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { nearbyPlaces, searchPlaces } from "@/lib/clients/places";
+import { getPlace, nearbyPlaces, searchPlaces } from "@/lib/clients/places";
 import { quickAssess } from "@/lib/prospect";
 import type { Place, Prospect } from "@/lib/schemas";
 
@@ -14,12 +14,15 @@ export async function GET(request: Request) {
   const lng = params.get("lng");
 
   try {
+    // A place id resolves directly — that is how ?place= restores a selection.
     const places: Place[] =
-      lat && lng
-        ? await nearbyPlaces(Number(lat), Number(lng))
-        : query && query.trim().length > 1
-          ? await searchPlaces(query.trim())
-          : [];
+      query && /^[A-Za-z0-9_-]{20,}$/.test(query.trim())
+        ? [await getPlace(query.trim())]
+        : lat && lng
+          ? await nearbyPlaces(Number(lat), Number(lng))
+          : query && query.trim().length > 1
+            ? await searchPlaces(query.trim())
+            : [];
 
     const pins: Pin[] = places
       .filter((p) => p.lat !== null && p.lng !== null)

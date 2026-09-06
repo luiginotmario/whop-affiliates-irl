@@ -45,6 +45,27 @@ export type Tokens = {
   expires_in: number;
 };
 
+/** Exchanges a refresh token for a fresh access token, so an expired session
+ *  renews silently instead of bouncing the user through Whop again. */
+export async function refreshTokens(options: {
+  refreshToken: string;
+  clientId: string;
+}): Promise<Tokens> {
+  const res = await fetch(TOKEN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      grant_type: "refresh_token",
+      refresh_token: options.refreshToken,
+      client_id: options.clientId,
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`Token refresh failed: ${res.status} ${await res.text()}`);
+  }
+  return (await res.json()) as Tokens;
+}
+
 /** PKCE, so no client secret. The verifier is the proof. */
 export async function exchangeCode(options: {
   code: string;

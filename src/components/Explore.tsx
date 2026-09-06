@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ProspectMap } from "@/components/ProspectMap";
 import { ProspectSheet } from "@/components/ProspectSheet";
@@ -7,6 +8,9 @@ import { LocateButton } from "@/components/LocateButton";
 import type { Pin } from "@/app/api/prospects/route";
 
 export function Explore() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const placeParam = params.get("place");
   const [pins, setPins] = useState<Pin[]>([]);
   const [selected, setSelected] = useState<Pin | null>(null);
   const [centre, setCentre] = useState<{ lat: number; lng: number } | null>(
@@ -87,13 +91,51 @@ export function Explore() {
     return () => clearTimeout(timer);
   }, [query, load]);
 
-  // Selecting from either surface moves the map to it.
-  const select = useCallback((pin: Pin) => {
-    setSelected(pin);
-    if (pin.lat !== null && pin.lng !== null) {
-      setCentre({ lat: pin.lat, lng: pin.lng });
-    }
-  }, []);
+  // Selecting from either surface moves the map to it, and records it in the
+  // URL. OAuth is a full page navigation, so React state cannot survive it —
+  // the URL is the only thing that can.
+  const select = useCallback(
+    (pin: Pin) => {
+      setSelected(pin);
+      if (pin.lat !== null && pin.lng !== null) {
+        setCentre({ lat: pin.lat, lng: pin.lng });
+      }
+      router.replace(`/?place=${encodeURIComponent(pin.id)}`, { scroll: false });
+    },
+    [router],
+  );
+
+  const clear = useCallback(() => {
+    setSelected(null);
+    router.replace("/", { scroll: false });
+  }, [router]);
+
+  // Restore whatever business the URL names — on first load, on back/forward,
+  // and after signing in with Whop.
+  useEffect(() => {
+    if (!placeParam || selected?.id === placeParam) return;
+    let cancelled = false;
+    void (async () => {
+      const res = await fetch(
+        `/api/prospects?q=${encodeURIComponent(placeParam)}`,
+      );
+      if (!res.ok || cancelled) return;
+      const json = await res.json();
+      const match = (json.pins as Pin[]).find((p) => p.id === placeParam);
+      if (!match || cancelled) return;
+      setSelected(match);
+      setPins((current) =>
+        current.some((p) => p.id === match.id) ? current : [match, ...current],
+      );
+      if (match.lat !== null && match.lng !== null) {
+        setCentre({ lat: match.lat, lng: match.lng });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [placeParam]);
 
   const hasToken = Boolean(process.env.NEXT_PUBLIC_MAPBOX_TOKEN);
 
@@ -129,7 +171,7 @@ export function Explore() {
         onQueryChange={setQuery}
         onLocate={locate}
         onSelect={select}
-        onClear={() => setSelected(null)}
+        onClear={clear}
       />
     </div>
   );

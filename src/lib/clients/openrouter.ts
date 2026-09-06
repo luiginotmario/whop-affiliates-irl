@@ -6,6 +6,7 @@ import { type BusinessContext, type Pitch, PitchSchema } from "@/lib/schemas";
 import { summarizeStack } from "@/lib/detect/stack";
 import { describeMarket } from "@/lib/competitive";
 import { describeProspect } from "@/lib/prospect";
+import { parsePartial } from "@/lib/partial-json";
 
 /** The knowledge base is the product. Read once at module load — it ships with
  *  the repo, so there is no reason to touch disk per request. */
@@ -88,6 +89,106 @@ Rules:
   Never estimate, project, or model a result. "Ads would drive 3x more" is
   forbidden. "Three shops within 500m out-review you" is encouraged.
 - Obey the "What not to say" section of the knowledge base exactly.`;
+
+/** The system prompt is byte-identical on every request and is most of the
+ *  input, so its prefill dominates time-to-first-token. Marking it cacheable
+ *  means later requests skip re-processing it. */
+function cachedSystem() {
+  return [
+    {
+      type: "text" as const,
+      text: SYSTEM,
+      cache_control: { type: "ephemeral" as const },
+    },
+  ];
+}
+
+type PartialPitch = {
+  bullets?: { say?: string; product?: string; how?: string }[];
+  objection?: { likely?: string; answer?: string };
+};
+
+/** A bullet is only worth showing once all three of its fields have arrived —
+ *  a half-written line is worse than no line for someone reading it aloud. */
+function completeBullets(partial: PartialPitch | null) {
+  return (partial?.bullets ?? []).filter(
+    (b): b is { say: string; product: string; how: string } =>
+      Boolean(b?.say && b?.product && b?.how),
+  );
+}
+
+/** Streams the pitch, calling back as each complete bullet lands. Turns a
+ *  40-second wait into a few seconds to the first line. */
+export async function streamPitch(
+  ctx: BusinessContext,
+  onBullet: (bullet: { say: string; product: string; how: string }, index: number) => void,
+): Promise<Pitch> {
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${env.openRouter()}`,
+    },
+    body: JSON.stringify({
+      model: env.model(),
+      stream: true,
+      messages: [
+        { role: "system", content: cachedSystem() },
+        { role: "user", content: describe(ctx) },
+      ],
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "pitch",
+          strict: true,
+          schema: z.toJSONSchema(PitchSchema),
+        },
+      },
+    }),
+    signal: AbortSignal.timeout(45_000),
+  });
+
+  if (!res.ok || !res.body) {
+    throw new Error(`OpenRouter failed: ${res.status} ${await res.text()}`);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let content = "";
+  let emitted = 0;
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    // SSE frames are newline delimited; the last one may be incomplete.
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      if (!line.startsWith("data:")) continue;
+      const payload = line.slice(5).trim();
+      if (!payload || payload === "[DONE]") continue;
+      try {
+        const chunk = JSON.parse(payload) as {
+          choices?: { delta?: { content?: string } }[];
+        };
+        content += chunk.choices?.[0]?.delta?.content ?? "";
+      } catch {
+        continue; // a frame split across reads; the next pass picks it up
+      }
+    }
+
+    const bullets = completeBullets(parsePartial<PartialPitch>(content));
+    for (; emitted < bullets.length; emitted++) {
+      onBullet(bullets[emitted], emitted);
+    }
+  }
+
+  return PitchSchema.parse(JSON.parse(content));
+}
 
 export async function generatePitch(ctx: BusinessContext): Promise<Pitch> {
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {

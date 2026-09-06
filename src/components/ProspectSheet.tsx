@@ -67,6 +67,7 @@ export function ProspectSheet({
   const [brief, setBrief] = useState<Brief | null>(null);
   const [briefError, setBriefError] = useState<string | null>(null);
   const [loadingBrief, setLoadingBrief] = useState(false);
+  const [streaming, setStreaming] = useState(false);
   const [partner, setPartner] = useState<PartnerState | null>(null);
 
   // A new business invalidates whatever pitch is on screen.
@@ -74,29 +75,84 @@ export function ProspectSheet({
     setBrief(null);
     setBriefError(null);
     setLoadingBrief(false);
+    setStreaming(false);
   }, [selected?.id]);
 
   const getPitch = useCallback(async () => {
     if (!selected) return;
     setLoadingBrief(true);
+    setStreaming(true);
     setBriefError(null);
+    setBrief(null);
     // The QR is per-user and identical everywhere, so it loads alongside the
     // pitch rather than after it.
     void fetch("/api/partner")
       .then((r) => r.json())
       .then(setPartner)
       .catch(() => setPartner({ state: "signed_out" }));
+
     try {
       const res = await fetch(`/api/pitch/${selected.id}`);
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Couldn't build the pitch");
-      setBrief(json);
+      if (!res.ok || !res.body) throw new Error("Couldn't build the pitch");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        // Newline delimited; the final line of a chunk may be incomplete.
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const event = JSON.parse(line);
+
+          if (event.type === "error") throw new Error(event.error);
+
+          if (event.type === "context") {
+            // Header and detected stack render before a word is written.
+            setBrief({
+              place: event.place,
+              context: event.context,
+              pitch: { bullets: [], objection: { likely: "", answer: "" } },
+            });
+            setLoadingBrief(false);
+          }
+
+          if (event.type === "bullet") {
+            setBrief((current) =>
+              current
+                ? {
+                    ...current,
+                    pitch: {
+                      ...current.pitch,
+                      bullets: [...current.pitch.bullets, event.bullet],
+                    },
+                  }
+                : current,
+            );
+          }
+
+          if (event.type === "done") {
+            setBrief((current) =>
+              current ? { ...current, pitch: event.pitch } : current,
+            );
+            setStreaming(false);
+          }
+        }
+      }
     } catch (error) {
       setBriefError(
         error instanceof Error ? error.message : "Couldn't build the pitch",
       );
     } finally {
       setLoadingBrief(false);
+      setStreaming(false);
     }
   }, [selected]);
 
@@ -176,7 +232,7 @@ export function ProspectSheet({
               <BuildingPitch />
             ) : brief ? (
               <div className="flex flex-col gap-3">
-                <PitchCard {...brief} />
+                <PitchCard {...brief} streaming={streaming} />
                 {partner?.state === "ready" ? (
                   <QrClose
                     qrDataUrl={partner.qrDataUrl}
@@ -184,7 +240,7 @@ export function ProspectSheet({
                   />
                 ) : partner ? (
                   <SignInPrompt
-                    next="/"
+                    next={`/?place=${encodeURIComponent(selected.id)}`}
                     signedIn={partner.state === "no_permission"}
                   />
                 ) : null}

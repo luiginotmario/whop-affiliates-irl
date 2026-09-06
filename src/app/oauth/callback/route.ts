@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { env } from "@/lib/env";
 import { exchangeCode, fetchUserInfo } from "@/lib/oauth";
-import { PKCE_COOKIE, SESSION_COOKIE } from "@/lib/session";
+import {
+  PKCE_COOKIE,
+  SESSION_COOKIE,
+  sessionCookieOptions,
+} from "@/lib/session";
 
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
@@ -48,14 +52,10 @@ export async function GET(request: Request) {
         userId: user.sub,
         token: tokens.access_token,
         username: user.username ?? user.preferred_username ?? user.name ?? null,
+        refreshToken: tokens.refresh_token,
+        expiresAt: Date.now() + (tokens.expires_in ?? 3600) * 1000,
       }),
-      {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
-        path: "/",
-        maxAge: tokens.expires_in ?? 60 * 60 * 24 * 30,
-      },
+      sessionCookieOptions(),
     );
     res.cookies.delete(PKCE_COOKIE);
     return res;
