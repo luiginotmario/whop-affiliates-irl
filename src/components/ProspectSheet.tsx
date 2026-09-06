@@ -169,7 +169,6 @@ export function ProspectSheet({
       <div
         ref={panelRef}
         data-collapsed={drag.collapsed}
-        {...drag.handlers}
         className="sheet-panel max-w-xl rounded-t-6 bg-panel-solid shadow-lg"
       >
         {/* Grab area. touch-action:none so the browser does not steal the
@@ -190,10 +189,11 @@ export function ProspectSheet({
               drag.toggle();
             }
           }}
+          {...drag.handlers}
         >
           <div className="h-1.5 w-10 rounded-full bg-gray-7" />
         </div>
-        <div className="sheet-body" data-sheet-scroll>
+        <div className="sheet-body">
 
         {selected ? (
           <div className="flex flex-col gap-3 p-4">

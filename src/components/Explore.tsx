@@ -55,21 +55,34 @@ export function Explore() {
         if (!silent) setMessage(text);
       };
 
-      // Browsers refuse geolocation outside a secure context and reject with
-      // PERMISSION_DENIED without ever prompting — which looks exactly like a
-      // refusal. Say what actually happened.
       if (!window.isSecureContext) {
         fail("Location needs HTTPS. Open the site over https, or on localhost.");
         return;
       }
       if (!navigator.geolocation) {
-        fail("This device has no location.");
+        fail("This device has no location API.");
         return;
       }
 
       setLocating(true);
+
+      // A hard ceiling of our own. If neither callback ever fires — which some
+      // mobile browsers do when Location Services is off at the OS level —
+      // the button would stay disabled forever with no explanation.
+      let settled = false;
+      const giveUp = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        fail(
+          "The browser never answered the location request. On iOS check Settings > Privacy & Security > Location Services > Safari Websites.",
+        );
+      }, 12000);
+
       navigator.geolocation.getCurrentPosition(
         ({ coords }) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(giveUp);
           setLocating(false);
           setMessage(null);
           const here = { lat: coords.latitude, lng: coords.longitude };
@@ -78,12 +91,19 @@ export function Explore() {
           void load(`/api/prospects?lat=${here.lat}&lng=${here.lng}`);
         },
         (error) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(giveUp);
+          // Report what the browser actually said. A friendly rewrite here is
+          // what made this impossible to diagnose.
+          const names: Record<number, string> = {
+            1: "PERMISSION_DENIED",
+            2: "POSITION_UNAVAILABLE",
+            3: "TIMEOUT",
+          };
           fail(
-            error.code === error.PERMISSION_DENIED
-              ? "Location permission denied. Allow it in your browser settings, or search by name."
-              : error.code === error.TIMEOUT
-                ? "Couldn't get a fix in time. Try again, or search by name."
-                : "Location unavailable. Search by name instead.",
+            `Location failed - ${names[error.code] ?? `code ${error.code}`}` +
+              (error.message ? `: ${error.message}` : ""),
           );
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
