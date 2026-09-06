@@ -48,32 +48,68 @@ export function Explore() {
     }
   }, []);
 
-  const locate = useCallback(() => {
-    if (!navigator.geolocation) {
-      setMessage("This device has no location.");
-      return;
-    }
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
+  const locate = useCallback(
+    ({ silent = false }: { silent?: boolean } = {}) => {
+      const fail = (text: string) => {
         setLocating(false);
-        const here = { lat: coords.latitude, lng: coords.longitude };
-        setUserLocation(here);
-        setCentre(here);
-        void load(`/api/prospects?lat=${here.lat}&lng=${here.lng}`);
-      },
-      () => {
-        setLocating(false);
-        setMessage("Location denied. Search by name instead.");
-      },
-      { enableHighAccuracy: true, timeout: 8000 },
-    );
-  }, [load]);
+        if (!silent) setMessage(text);
+      };
 
-  // Ask on arrival. The whole product is "what is around me", so waiting for a
-  // tap just shows an empty map first.
+      // Browsers refuse geolocation outside a secure context and reject with
+      // PERMISSION_DENIED without ever prompting — which looks exactly like a
+      // refusal. Say what actually happened.
+      if (!window.isSecureContext) {
+        fail("Location needs HTTPS. Open the site over https, or on localhost.");
+        return;
+      }
+      if (!navigator.geolocation) {
+        fail("This device has no location.");
+        return;
+      }
+
+      setLocating(true);
+      navigator.geolocation.getCurrentPosition(
+        ({ coords }) => {
+          setLocating(false);
+          setMessage(null);
+          const here = { lat: coords.latitude, lng: coords.longitude };
+          setUserLocation(here);
+          setCentre(here);
+          void load(`/api/prospects?lat=${here.lat}&lng=${here.lng}`);
+        },
+        (error) => {
+          fail(
+            error.code === error.PERMISSION_DENIED
+              ? "Location permission denied. Allow it in your browser settings, or search by name."
+              : error.code === error.TIMEOUT
+                ? "Couldn't get a fix in time. Try again, or search by name."
+                : "Location unavailable. Search by name instead.",
+          );
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+      );
+    },
+    [load],
+  );
+
+  // Deliberately NOT called on mount. Mobile Safari denies a geolocation
+  // request that is not tied to a user gesture, and that denial sticks for the
+  // rest of the page session — so an eager call on load means the button can
+  // never prompt afterwards. It has to start from a tap.
+  //
+  // If the browser already holds a granted permission we can use it silently,
+  // because that path does not prompt and cannot be denied for lack of a
+  // gesture.
   useEffect(() => {
-    locate();
+    if (!navigator.permissions?.query) return;
+    void navigator.permissions
+      .query({ name: "geolocation" as PermissionName })
+      .then((status) => {
+        if (status.state === "granted") locate({ silent: true });
+      })
+      .catch(() => {
+        /* Safari may not expose the geolocation permission; wait for the tap */
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -154,7 +190,7 @@ export function Explore() {
             onSelect={select}
             onMoveEnd={onMoveEnd}
           />
-          <LocateButton onClick={locate} busy={locating} />
+          <LocateButton onClick={() => locate()} busy={locating} />
         </>
       ) : (
         <div className="absolute inset-0 grid place-items-center bg-gray-2 px-6 text-center">

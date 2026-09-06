@@ -85,6 +85,17 @@ export function useSheetDrag(
     (event: React.PointerEvent) => {
       const panel = panelRef.current;
       if (!panel || dragging.current) return; // multi-pointer guard
+
+      const target = event.target as HTMLElement;
+      // Never hijack a control or a text selection.
+      if (target.closest("button, a, input, textarea, select, [role='button']")) {
+        return;
+      }
+      // A sheet drags from anywhere, but the body scrolls too. Only take the
+      // gesture when that scroll is already at the top — otherwise the user is
+      // scrolling content, not moving the sheet.
+      const scroller = target.closest<HTMLElement>("[data-sheet-scroll]");
+      if (scroller && scroller.scrollTop > 0) return;
       try {
         event.currentTarget.setPointerCapture(event.pointerId);
       } catch {

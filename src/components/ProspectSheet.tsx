@@ -169,14 +169,16 @@ export function ProspectSheet({
       <div
         ref={panelRef}
         data-collapsed={drag.collapsed}
+        {...drag.handlers}
         className="sheet-panel max-w-xl rounded-t-6 bg-panel-solid shadow-lg"
       >
         {/* Grab area. touch-action:none so the browser does not steal the
             gesture for scrolling before the handler sees it. */}
         <div
           ref={headerRef}
-          className="shrink-0 cursor-grab select-none rounded-t-6 bg-panel-solid pb-1 pt-2 active:cursor-grabbing"
-          style={{ touchAction: "none" }}
+          // A 4px pill is not a touch target. The grab area is padded out to
+          // ~40px so a thumb can find it, with the pill drawn inside.
+          className="flex shrink-0 cursor-grab touch-none select-none items-center justify-center rounded-t-6 bg-panel-solid py-4 active:cursor-grabbing"
           role="button"
           tabIndex={0}
           aria-label={drag.collapsed ? "Expand panel" : "Collapse panel"}
@@ -188,11 +190,10 @@ export function ProspectSheet({
               drag.toggle();
             }
           }}
-          {...drag.handlers}
         >
-          <div className="mx-auto h-1 w-9 rounded-full bg-gray-6" />
+          <div className="h-1.5 w-10 rounded-full bg-gray-7" />
         </div>
-        <div className="sheet-body">
+        <div className="sheet-body" data-sheet-scroll>
 
         {selected ? (
           <div className="flex flex-col gap-3 p-4">

@@ -68,6 +68,8 @@ body {
      and a long pitch both fit exactly, and neither leaves empty space. */
   height: auto;
   max-height: 84svh;
+  /* The panel owns vertical gestures; the body opts back in below. */
+  touch-action: none;
   /* Drawer duration from the standards table, iOS drawer curve. A transition
      rather than keyframes so a drag can interrupt and retarget it. */
   transition: height 380ms var(--ease-drawer);
@@ -85,6 +87,8 @@ body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  /* Content still scrolls; the drag only takes over at scrollTop 0. */
+  touch-action: pan-y;
   overscroll-behavior: contain;
   scrollbar-width: none;
   padding-bottom: calc(1rem + env(safe-area-inset-bottom));
