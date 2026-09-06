@@ -61,8 +61,19 @@ export const buildContext = unstable_cache(gatherContext, ["context", CONTEXT_VE
   tags: ["context"],
 });
 
-/** Non-streaming path, used by the deep link page. */
+/** Bump when the Pitch schema or the prompt changes. */
+const PITCH_VERSION = "v6-pitch";
+
+/** The generated pitch, cached by business. Without this the model re-runs on
+ *  every view — 25s each time, and different words each time, which is worse
+ *  than slow when someone is mid-conversation reading them aloud. */
+export const buildPitch = unstable_cache(
+  async (placeId: string) => generatePitch(await buildContext(placeId)),
+  ["pitch", PITCH_VERSION],
+  { revalidate: 60 * 60 * 24, tags: ["pitch"] },
+);
+
 export async function buildBrief(placeId: string): Promise<Brief> {
-  const context = await buildContext(placeId);
-  return { place: context.place, context, pitch: await generatePitch(context) };
+  const [context, pitch] = [await buildContext(placeId), await buildPitch(placeId)];
+  return { place: context.place, context, pitch };
 }

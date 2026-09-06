@@ -1,5 +1,4 @@
-import { streamPitch } from "@/lib/clients/openrouter";
-import { buildContext } from "@/lib/pitch";
+import { buildContext, buildPitch } from "@/lib/pitch";
 
 /** Research plus generation runs past Vercel's default ceiling. Without this
  *  the platform kills the function before the model answers. */
@@ -10,8 +9,9 @@ type Event =
   | { type: "done"; pitch: unknown }
   | { type: "error"; error: string };
 
-/** Newline-delimited JSON rather than a single response: the header renders as
- *  soon as the context lands, then each bullet as the model writes it. */
+/** Newline-delimited JSON in two beats: the context event lands as soon as the
+ *  lookup, scrape and research finish, so the loader's ticks are real; the
+ *  pitch follows. Both halves are cached, so a second view is instant. */
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ placeId: string }> },
@@ -27,9 +27,7 @@ export async function GET(
       try {
         const context = await buildContext(placeId);
         send({ type: "context", place: context.place, context });
-
-        const pitch = await streamPitch(context);
-        send({ type: "done", pitch });
+        send({ type: "done", pitch: await buildPitch(placeId) });
       } catch (error) {
         send({
           type: "error",
@@ -48,7 +46,6 @@ export async function GET(
     headers: {
       "Content-Type": "application/x-ndjson; charset=utf-8",
       "Cache-Control": "no-store",
-      // Proxies that buffer would defeat the point of streaming.
       "X-Accel-Buffering": "no",
     },
   });

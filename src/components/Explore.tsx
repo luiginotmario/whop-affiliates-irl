@@ -11,6 +11,9 @@ export function Explore() {
   const router = useRouter();
   const params = useSearchParams();
   const placeParam = params.get("place");
+  // Set once a pitch has been generated, so returning from Whop restores the
+  // pitch itself rather than dropping you back on a "Get the pitch" button.
+  const pitchParam = params.get("pitch") === "1";
   const [pins, setPins] = useState<Pin[]>([]);
   const [selected, setSelected] = useState<Pin | null>(null);
   const [centre, setCentre] = useState<{ lat: number; lng: number } | null>(
@@ -171,6 +174,7 @@ export function Explore() {
         onQueryChange={setQuery}
         onLocate={locate}
         onSelect={select}
+        autoPitch={pitchParam}
         onClear={clear}
       />
     </div>

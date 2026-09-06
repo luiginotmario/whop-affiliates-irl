@@ -46,6 +46,7 @@ export function ProspectSheet({
   query,
   busy,
   message,
+  autoPitch,
   onQueryChange,
   onLocate,
   onSelect,
@@ -56,6 +57,7 @@ export function ProspectSheet({
   query: string;
   busy: boolean;
   message: string | null;
+  autoPitch: boolean;
   onQueryChange: (value: string) => void;
   onLocate: () => void;
   onSelect: (pin: Pin) => void;
@@ -77,6 +79,16 @@ export function ProspectSheet({
     setLoadingBrief(false);
   }, [selected?.id]);
 
+  const requested = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!autoPitch || !selected || brief || loadingBrief) return;
+    if (requested.current === selected.id) return;
+    requested.current = selected.id;
+    void getPitch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPitch, selected?.id]);
+
   const getPitch = useCallback(async () => {
     if (!selected) return;
     setLoadingBrief(true);
@@ -92,6 +104,12 @@ export function ProspectSheet({
 
     let context: { place: Brief["place"]; context: Brief["context"] } | null =
       null;
+
+    window.history.replaceState(
+      null,
+      "",
+      `/?place=${encodeURIComponent(selected.id)}&pitch=1`,
+    );
 
     try {
       const res = await fetch(`/api/pitch/${selected.id}`);
@@ -224,7 +242,7 @@ export function ProspectSheet({
                   />
                 ) : partner ? (
                   <SignInPrompt
-                    next={`/?place=${encodeURIComponent(selected.id)}`}
+                    next={`/?place=${encodeURIComponent(selected.id)}&pitch=1`}
                     signedIn={partner.state === "no_permission"}
                   />
                 ) : null}
