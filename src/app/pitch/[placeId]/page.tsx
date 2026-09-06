@@ -18,7 +18,7 @@ export default async function PitchPage({
   const { placeId } = await params;
   return (
     <div className="scrollbar-none pb-safe mx-auto flex h-full w-full max-w-xl flex-col gap-4 overflow-y-auto overscroll-contain px-6 pt-6">
-      <Suspense fallback={<BuildingPitch />}>
+      <Suspense fallback={<BuildingPitch stage="lookup" />}>
         <Brief placeId={placeId} />
       </Suspense>
       <Suspense fallback={null}>

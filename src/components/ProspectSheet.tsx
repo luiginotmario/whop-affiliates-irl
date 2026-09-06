@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Badge, Button, Heading, Spinner, Text, TextField } from "frosted-ui";
 import type { Pin } from "@/app/api/prospects/route";
 import { PitchCard, type Brief } from "@/components/PitchCard";
-import { BuildingPitch } from "@/components/BuildingPitch";
+import { BuildingPitch, type Stage } from "@/components/BuildingPitch";
 import { QrClose } from "@/components/QrClose";
 import { SignInPrompt } from "@/components/SignInPrompt";
 import { useSheetDrag } from "@/lib/useSheetDrag";
@@ -67,7 +67,7 @@ export function ProspectSheet({
   const [brief, setBrief] = useState<Brief | null>(null);
   const [briefError, setBriefError] = useState<string | null>(null);
   const [loadingBrief, setLoadingBrief] = useState(false);
-  const [streaming, setStreaming] = useState(false);
+  const [stage, setStage] = useState<Stage>("lookup");
   const [partner, setPartner] = useState<PartnerState | null>(null);
 
   // A new business invalidates whatever pitch is on screen.
@@ -75,13 +75,12 @@ export function ProspectSheet({
     setBrief(null);
     setBriefError(null);
     setLoadingBrief(false);
-    setStreaming(false);
   }, [selected?.id]);
 
   const getPitch = useCallback(async () => {
     if (!selected) return;
     setLoadingBrief(true);
-    setStreaming(true);
+    setStage("lookup");
     setBriefError(null);
     setBrief(null);
     // The QR is per-user and identical everywhere, so it loads alongside the
@@ -90,6 +89,9 @@ export function ProspectSheet({
       .then((r) => r.json())
       .then(setPartner)
       .catch(() => setPartner({ state: "signed_out" }));
+
+    let context: { place: Brief["place"]; context: Brief["context"] } | null =
+      null;
 
     try {
       const res = await fetch(`/api/pitch/${selected.id}`);
@@ -114,35 +116,18 @@ export function ProspectSheet({
 
           if (event.type === "error") throw new Error(event.error);
 
+          // The context event means the lookup and the scrape are done, so
+          // the loader can tick them off for real rather than on a timer.
           if (event.type === "context") {
-            // Header and detected stack render before a word is written.
-            setBrief({
-              place: event.place,
-              context: event.context,
-              pitch: { bullets: [], objection: { likely: "", answer: "" } },
-            });
-            setLoadingBrief(false);
+            context = { place: event.place, context: event.context };
+            setStage("pitch");
           }
 
-          if (event.type === "bullet") {
-            setBrief((current) =>
-              current
-                ? {
-                    ...current,
-                    pitch: {
-                      ...current.pitch,
-                      bullets: [...current.pitch.bullets, event.bullet],
-                    },
-                  }
-                : current,
-            );
-          }
-
-          if (event.type === "done") {
-            setBrief((current) =>
-              current ? { ...current, pitch: event.pitch } : current,
-            );
-            setStreaming(false);
+          // Bullets arrive individually but the card is only shown complete —
+          // a loader, then a half-filled card, then another loader reads as
+          // broken. One state change, one finished card.
+          if (event.type === "done" && context) {
+            setBrief({ ...context, pitch: event.pitch });
           }
         }
       }
@@ -152,7 +137,6 @@ export function ProspectSheet({
       );
     } finally {
       setLoadingBrief(false);
-      setStreaming(false);
     }
   }, [selected]);
 
@@ -229,10 +213,10 @@ export function ProspectSheet({
             </Text>
 
             {loadingBrief ? (
-              <BuildingPitch />
+              <BuildingPitch stage={stage} />
             ) : brief ? (
               <div className="flex flex-col gap-3">
-                <PitchCard {...brief} streaming={streaming} />
+                <PitchCard {...brief} />
                 {partner?.state === "ready" ? (
                   <QrClose
                     qrDataUrl={partner.qrDataUrl}

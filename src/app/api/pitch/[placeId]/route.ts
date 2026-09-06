@@ -7,7 +7,6 @@ export const maxDuration = 60;
 
 type Event =
   | { type: "context"; place: unknown; context: unknown }
-  | { type: "bullet"; index: number; bullet: unknown }
   | { type: "done"; pitch: unknown }
   | { type: "error"; error: string };
 
@@ -29,9 +28,7 @@ export async function GET(
         const context = await buildContext(placeId);
         send({ type: "context", place: context.place, context });
 
-        const pitch = await streamPitch(context, (bullet, index) =>
-          send({ type: "bullet", index, bullet }),
-        );
+        const pitch = await streamPitch(context);
         send({ type: "done", pitch });
       } catch (error) {
         send({

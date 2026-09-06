@@ -6,7 +6,6 @@ import { type BusinessContext, type Pitch, PitchSchema } from "@/lib/schemas";
 import { summarizeStack } from "@/lib/detect/stack";
 import { describeMarket } from "@/lib/competitive";
 import { describeProspect } from "@/lib/prospect";
-import { parsePartial } from "@/lib/partial-json";
 
 /** The knowledge base is the product. Read once at module load — it ships with
  *  the repo, so there is no reason to touch disk per request. */
@@ -103,26 +102,10 @@ function cachedSystem() {
   ];
 }
 
-type PartialPitch = {
-  bullets?: { say?: string; product?: string; how?: string }[];
-  objection?: { likely?: string; answer?: string };
-};
-
-/** A bullet is only worth showing once all three of its fields have arrived —
- *  a half-written line is worse than no line for someone reading it aloud. */
-function completeBullets(partial: PartialPitch | null) {
-  return (partial?.bullets ?? []).filter(
-    (b): b is { say: string; product: string; how: string } =>
-      Boolean(b?.say && b?.product && b?.how),
-  );
-}
-
-/** Streams the pitch, calling back as each complete bullet lands. Turns a
- *  40-second wait into a few seconds to the first line. */
-export async function streamPitch(
-  ctx: BusinessContext,
-  onBullet: (bullet: { say: string; product: string; how: string }, index: number) => void,
-): Promise<Pitch> {
+/** Streams the model response. The bytes are not shown as they arrive — the
+ *  card renders complete — but streaming keeps the connection producing so a
+ *  long generation cannot look like a stalled request. */
+export async function streamPitch(ctx: BusinessContext): Promise<Pitch> {
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -156,7 +139,6 @@ export async function streamPitch(
   const decoder = new TextDecoder();
   let buffer = "";
   let content = "";
-  let emitted = 0;
 
   for (;;) {
     const { done, value } = await reader.read();
@@ -179,11 +161,6 @@ export async function streamPitch(
       } catch {
         continue; // a frame split across reads; the next pass picks it up
       }
-    }
-
-    const bullets = completeBullets(parsePartial<PartialPitch>(content));
-    for (; emitted < bullets.length; emitted++) {
-      onBullet(bullets[emitted], emitted);
     }
   }
 

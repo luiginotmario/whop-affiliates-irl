@@ -1,26 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Badge, Card, Spinner, Text } from "frosted-ui";
 
-/** The three real legs of buildBrief, in order. */
+/** The legs of buildBrief, in order. */
 const STEPS = [
-  { key: "lookup", label: "Looking them up", after: 900 },
-  { key: "site", label: "Reading their site", after: 2600 },
-  { key: "pitch", label: "Writing your pitch", after: Infinity },
+  { key: "lookup", label: "Looking them up" },
+  { key: "site", label: "Reading their site" },
+  { key: "pitch", label: "Writing your pitch", note: "Usually a few seconds" },
 ] as const;
 
-export function BuildingPitch() {
-  const [index, setIndex] = useState(0);
+export type Stage = (typeof STEPS)[number]["key"];
 
-  // Advances on the measured duration of each leg rather than real events —
-  // the brief is one server render, so there is no progress channel to read.
-  useEffect(() => {
-    const step = STEPS[index];
-    if (!step || step.after === Infinity) return;
-    const timer = setTimeout(() => setIndex((i) => i + 1), step.after);
-    return () => clearTimeout(timer);
-  }, [index]);
+/** Driven by real stream events rather than timers: the context event marks
+ *  the lookup and scrape done, so the ticks mean something. */
+export function BuildingPitch({ stage }: { stage: Stage }) {
+  const index = STEPS.findIndex((s) => s.key === stage);
 
   return (
     <Card size="4" className="w-full">
@@ -50,9 +44,9 @@ export function BuildingPitch() {
                 >
                   {step.label}
                 </Text>
-                {step.key === "pitch" ? (
+                {"note" in step && step.note ? (
                   <Text size="1" color="gray">
-                    Usually a few seconds
+                    {step.note}
                   </Text>
                 ) : null}
               </div>
