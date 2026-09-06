@@ -48,88 +48,32 @@ export function Explore() {
     }
   }, []);
 
-  const locate = useCallback(
-    ({ silent = false }: { silent?: boolean } = {}) => {
-      const fail = (text: string) => {
+  const locate = useCallback(() => {
+    if (!navigator.geolocation) {
+      setMessage("This device has no location.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
         setLocating(false);
-        if (!silent) setMessage(text);
-      };
+        const here = { lat: coords.latitude, lng: coords.longitude };
+        setUserLocation(here);
+        setCentre(here);
+        void load(`/api/prospects?lat=${here.lat}&lng=${here.lng}`);
+      },
+      () => {
+        setLocating(false);
+        setMessage("Location denied. Search by name instead.");
+      },
+      { enableHighAccuracy: true, timeout: 8000 },
+    );
+  }, [load]);
 
-      if (!window.isSecureContext) {
-        fail("Location needs HTTPS. Open the site over https, or on localhost.");
-        return;
-      }
-      if (!navigator.geolocation) {
-        fail("This device has no location API.");
-        return;
-      }
-
-      setLocating(true);
-
-      // A hard ceiling of our own. If neither callback ever fires — which some
-      // mobile browsers do when Location Services is off at the OS level —
-      // the button would stay disabled forever with no explanation.
-      let settled = false;
-      const giveUp = setTimeout(() => {
-        if (settled) return;
-        settled = true;
-        fail(
-          "The browser never answered the location request. On iOS check Settings > Privacy & Security > Location Services > Safari Websites.",
-        );
-      }, 12000);
-
-      navigator.geolocation.getCurrentPosition(
-        ({ coords }) => {
-          if (settled) return;
-          settled = true;
-          clearTimeout(giveUp);
-          setLocating(false);
-          setMessage(null);
-          const here = { lat: coords.latitude, lng: coords.longitude };
-          setUserLocation(here);
-          setCentre(here);
-          void load(`/api/prospects?lat=${here.lat}&lng=${here.lng}`);
-        },
-        (error) => {
-          if (settled) return;
-          settled = true;
-          clearTimeout(giveUp);
-          // Report what the browser actually said. A friendly rewrite here is
-          // what made this impossible to diagnose.
-          const names: Record<number, string> = {
-            1: "PERMISSION_DENIED",
-            2: "POSITION_UNAVAILABLE",
-            3: "TIMEOUT",
-          };
-          fail(
-            `Location failed - ${names[error.code] ?? `code ${error.code}`}` +
-              (error.message ? `: ${error.message}` : ""),
-          );
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
-      );
-    },
-    [load],
-  );
-
-  // Deliberately NOT called on mount. Mobile Safari denies a geolocation
-  // request that is not tied to a user gesture, and that denial sticks for the
-  // rest of the page session — so an eager call on load means the button can
-  // never prompt afterwards. It has to start from a tap.
-  //
-  // If the browser already holds a granted permission we can use it silently,
-  // because that path does not prompt and cannot be denied for lack of a
-  // gesture.
+  // Ask on arrival. The whole product is "what is around me", so waiting for a
+  // tap just shows an empty map first.
   useEffect(() => {
-    if (!navigator.permissions?.query) return;
-    void navigator.permissions
-      .query({ name: "geolocation" as PermissionName })
-      .then((status) => {
-        if (status.state === "granted") locate({ silent: true });
-      })
-      .catch(() => {
-        /* Safari may not expose the geolocation permission; wait for the tap */
-      });
+    locate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -210,7 +154,7 @@ export function Explore() {
             onSelect={select}
             onMoveEnd={onMoveEnd}
           />
-          <LocateButton onClick={() => locate()} busy={locating} />
+          <LocateButton onClick={locate} busy={locating} />
         </>
       ) : (
         <div className="absolute inset-0 grid place-items-center bg-gray-2 px-6 text-center">

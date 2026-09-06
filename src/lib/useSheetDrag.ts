@@ -86,11 +86,6 @@ export function useSheetDrag(
       const panel = panelRef.current;
       if (!panel || dragging.current) return; // multi-pointer guard
 
-      const target = event.target as HTMLElement;
-      // Never hijack a control or a text selection.
-      if (target.closest("button, a, input, textarea, select, [role='button']")) {
-        return;
-      }
       try {
         event.currentTarget.setPointerCapture(event.pointerId);
       } catch {
