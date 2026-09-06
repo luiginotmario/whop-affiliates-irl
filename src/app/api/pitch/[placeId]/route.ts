@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { buildBrief } from "@/lib/pitch";
 
+/** Research plus generation runs well past Vercel's default ceiling. Without
+ *  this the platform kills the function before the model answers. */
+export const maxDuration = 60;
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ placeId: string }> },

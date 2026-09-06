@@ -22,4 +22,8 @@ export const env = {
   whopBaseUrl: () =>
     process.env.WHOP_API_BASE_URL ?? "https://api.whop.com/api/v1",
   model: () => process.env.OPENROUTER_MODEL ?? "anthropic/claude-sonnet-5",
+  /** Tool research is a short factual lookup behind a web search — it does not
+   *  need the model that writes the pitch, and it is on the critical path. */
+  researchModel: () =>
+    process.env.OPENROUTER_RESEARCH_MODEL ?? "anthropic/claude-haiku-4-5",
 };

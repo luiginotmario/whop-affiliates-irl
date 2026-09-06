@@ -22,14 +22,14 @@ async function research(tool: string): Promise<string | null> {
         Authorization: `Bearer ${env.openRouter()}`,
       },
       body: JSON.stringify({
-        model: env.model(),
+        model: env.researchModel(),
         plugins: [{ id: "web", max_results: 4 }],
         messages: [
           { role: "system", content: PROMPT },
           { role: "user", content: `Tool: ${tool}` },
         ],
       }),
-      signal: AbortSignal.timeout(25_000),
+      signal: AbortSignal.timeout(20_000),
     });
     if (!res.ok) return null;
     const json = (await res.json()) as {

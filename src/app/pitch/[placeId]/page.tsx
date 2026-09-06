@@ -6,6 +6,8 @@ import { AccountBar } from "@/components/AccountBar";
 import { Close } from "@/components/Close";
 import { buildBrief } from "@/lib/pitch";
 
+export const maxDuration = 60;
+
 /** Deep link to a single pitch. The main surface is the map sheet; this exists
  *  so a pitch can be linked to or reloaded directly. */
 export default async function PitchPage({

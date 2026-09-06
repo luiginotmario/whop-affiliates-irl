@@ -111,7 +111,7 @@ export async function generatePitch(ctx: BusinessContext): Promise<Pitch> {
         },
       },
     }),
-    signal: AbortSignal.timeout(30_000),
+    signal: AbortSignal.timeout(45_000),
   });
 
   if (!res.ok) {
