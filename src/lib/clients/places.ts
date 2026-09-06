@@ -69,6 +69,35 @@ export async function searchPlaces(query: string): Promise<Place[]> {
   return (json.places ?? []).map(toPlace);
 }
 
+/** Places a salesperson can actually walk into and pitch. Without this the
+ *  nearby search returns bus stops, parks and observation decks.
+ *
+ *  Every value is verified against Table A of the Places API (New) type list.
+ *  Two constraints, both enforced by the API: max 50 types per restriction,
+ *  and Table A has no `dry_cleaner`, `tattoo_parlor` or `photographer` —
+ *  the equivalents are `laundry` and `body_art_service`.
+ *  https://developers.google.com/maps/documentation/places/web-service/place-types
+ */
+const PITCHABLE_TYPES = [
+  // Food and drink
+  "restaurant", "cafe", "coffee_shop", "bakery", "bar", "pub", "deli", "diner",
+  "ice_cream_shop", "sandwich_shop", "pizza_restaurant", "dessert_shop",
+  "juice_shop", "brewery",
+  // Beauty and personal care
+  "barber_shop", "hair_salon", "beauty_salon", "nail_salon", "spa",
+  "massage_spa", "body_art_service", "skin_care_clinic", "tanning_studio",
+  // Fitness and wellness
+  "gym", "fitness_center", "yoga_studio", "sports_club", "sports_coaching",
+  // Shopping
+  "clothing_store", "shoe_store", "jewelry_store", "book_store", "gift_shop",
+  "toy_store", "pet_store", "bicycle_store", "sporting_goods_store",
+  "cosmetics_store", "health_food_store", "butcher_shop", "grocery_store",
+  "convenience_store",
+  // Services
+  "florist", "tailor", "laundry", "veterinary_care", "catering_service",
+  "travel_agency", "car_repair", "car_wash",
+];
+
 /** "What's around me" — the no-typing path. */
 export async function nearbyPlaces(
   lat: number,
@@ -84,9 +113,11 @@ export async function nearbyPlaces(
         .join(","),
     },
     body: JSON.stringify({
-      maxResultCount: 10,
+      includedTypes: PITCHABLE_TYPES,
+      maxResultCount: 20,
+      rankPreference: "POPULARITY",
       locationRestriction: {
-        circle: { center: { latitude: lat, longitude: lng }, radius: 200 },
+        circle: { center: { latitude: lat, longitude: lng }, radius: 600 },
       },
     }),
   });

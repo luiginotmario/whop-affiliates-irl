@@ -5,6 +5,7 @@ import { env } from "@/lib/env";
 import { type BusinessContext, type Pitch, PitchSchema } from "@/lib/schemas";
 import { summarizeStack } from "@/lib/detect/stack";
 import { describeMarket } from "@/lib/competitive";
+import { describeProspect } from "@/lib/prospect";
 
 /** The knowledge base is the product. Read once at module load — it ships with
  *  the repo, so there is no reason to touch disk per request. */
@@ -58,6 +59,13 @@ Rules:
   writing anything. NEVER pitch a capability the incumbent already has — if
   their booking tool already takes deposits, do not offer them deposits. That
   is the fastest way to be dismissed.
+- If PROSPECT says they have NO website, that is the STRONGEST case on the
+  page, not a missing detail. It means no online checkout, no processor to
+  migrate, no booking tool, no contract to break — the whole Whop stack is
+  net-new. Lead with Whop Tap to Pay, then Whop Wallet, Whop Cards and Whop
+  Payouts. Never write "nothing detected" or hedge about missing data; a
+  cash-and-terminal business is the easiest sale here, not the hardest.
+  Physical businesses do not need to sell online to use Whop.
 - Never trash the incumbent, and never argue it fails at something outside its
   job. "Resy can't pay your staff" is a category error — nobody bought a
   booking tool for payroll, and saying it tells the owner you do not understand
@@ -120,7 +128,7 @@ export async function generatePitch(ctx: BusinessContext): Promise<Pitch> {
 }
 
 function describe(ctx: BusinessContext): string {
-  const { place, stack, siteSummary, market, incumbents } = ctx;
+  const { place, stack, siteSummary, market, incumbents, prospect } = ctx;
   return [
     `Business: ${place.name}`,
     place.category && `Category: ${place.category}`,
@@ -130,6 +138,7 @@ function describe(ctx: BusinessContext): string {
     place.priceLevel && `Price level: ${place.priceLevel}`,
     place.website ? `Website: ${place.website}` : "Website: none found",
     `Detected stack: ${summarizeStack(stack)}`,
+    `PROSPECT:\n${describeProspect(prospect)}`,
     market &&
       `MARKET POSITION (counted from live data, safe to quote):\n${describeMarket(
         market,

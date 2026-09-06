@@ -4,6 +4,12 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Curves from the animation standards — never approximate these. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 html,
 body {
   background-color: var(--color-page-background);
@@ -22,5 +28,74 @@ body {
   /* The last card must clear the iOS home indicator, not sit under it. */
   .pb-safe {
     padding-bottom: calc(2.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Bottom sheet. The bottom edge is pinned to the viewport and only the top
+   edge moves, so dragging changes HEIGHT, not translate — translating would
+   slide the bottom edge off-screen and leave a gap under it.
+   Height is the sanctioned exception where no transform equivalent exists. */
+.sheet-shell {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  padding: 0 0.75rem;
+  pointer-events: none;
+}
+
+/* On desktop the sheet moves out of the middle so the map stays readable. */
+@media (min-width: 768px) {
+  .sheet-shell {
+    justify-content: flex-start;
+    padding: 0 1rem 1rem;
+  }
+
+  .sheet-panel {
+    border-radius: var(--radius-6);
+  }
+}
+
+.sheet-panel {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+  /* Content decides the height. No detents to fabricate, so a short preview
+     and a long pitch both fit exactly, and neither leaves empty space. */
+  height: auto;
+  max-height: 84svh;
+  /* Drawer duration from the standards table, iOS drawer curve. A transition
+     rather than keyframes so a drag can interrupt and retarget it. */
+  transition: height 380ms var(--ease-drawer);
+  /* Height animation relayouts its subtree every frame. Containment stops that
+     invalidating the rest of the page — which matters with a map underneath. */
+  contain: layout paint;
+}
+
+/* While dragging, the pointer owns the height — no transition to fight. */
+.sheet-panel[data-dragging="true"] {
+  transition: none;
+}
+
+.sheet-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
+.sheet-body::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-panel {
+    transition: none;
   }
 }

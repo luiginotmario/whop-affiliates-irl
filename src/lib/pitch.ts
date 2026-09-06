@@ -5,6 +5,7 @@ import { generatePitch } from "@/lib/clients/openrouter";
 import { detectStack } from "@/lib/detect/stack";
 import { marketPosition } from "@/lib/competitive";
 import { researchStack } from "@/lib/clients/research";
+import { assessProspect } from "@/lib/prospect";
 import {
   StackSchema,
   type BusinessContext,
@@ -25,9 +26,10 @@ async function generateBrief(placeId: string): Promise<Brief> {
   const place = await getPlace(placeId);
 
   // The site scrape and the rival lookup are independent, so they overlap.
-  const [site, market] = await Promise.all([
+  const [site, market, prospect] = await Promise.all([
     place.website ? fetchSite(place.website) : Promise.resolve(null),
     marketPosition(place),
+    assessProspect(place),
   ]);
 
   const stack = site ? detectStack(site.html) : EMPTY_STACK;
@@ -42,6 +44,7 @@ async function generateBrief(placeId: string): Promise<Brief> {
     siteSummary: site?.text ?? null,
     market,
     incumbents,
+    prospect,
   };
 
   return { place, context, pitch: await generatePitch(context) };
@@ -53,7 +56,7 @@ async function generateBrief(placeId: string): Promise<Brief> {
  *  regenerating it would hand them different words to say. */
 /** Bump when the Pitch schema or prompt changes — a cached brief built against
  *  an older shape renders blank fields rather than failing loudly. */
-const BRIEF_VERSION = "v3-how";
+const BRIEF_VERSION = "v4-prospect";
 
 export const buildBrief = unstable_cache(generateBrief, ["brief", BRIEF_VERSION], {
   revalidate: 60 * 60 * 24,

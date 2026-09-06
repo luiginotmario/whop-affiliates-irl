@@ -1,14 +1,13 @@
-import Image from "next/image";
 import { Suspense } from "react";
-import { Badge, Card, Heading, Separator, Text } from "frosted-ui";
-import { SectionLabel } from "@/components/SectionLabel";
 import { BackButton } from "@/components/BackButton";
 import { BuildingPitch } from "@/components/BuildingPitch";
-import { Close } from "@/components/Close";
+import { PitchCard } from "@/components/PitchCard";
 import { AccountBar } from "@/components/AccountBar";
+import { Close } from "@/components/Close";
 import { buildBrief } from "@/lib/pitch";
-import type { Stack } from "@/lib/schemas";
 
+/** Deep link to a single pitch. The main surface is the map sheet; this exists
+ *  so a pitch can be linked to or reloaded directly. */
 export default async function PitchPage({
   params,
 }: {
@@ -16,8 +15,7 @@ export default async function PitchPage({
 }) {
   const { placeId } = await params;
   return (
-    // main is a fixed-height column, so this page owns its own scroll.
-    <div className="scrollbar-none pb-safe flex h-full flex-col gap-4 overflow-y-auto overscroll-contain pt-6">
+    <div className="scrollbar-none pb-safe mx-auto flex h-full w-full max-w-xl flex-col gap-4 overflow-y-auto overscroll-contain px-6 pt-6">
       <Suspense fallback={<BuildingPitch />}>
         <Brief placeId={placeId} />
       </Suspense>
@@ -29,95 +27,12 @@ export default async function PitchPage({
 }
 
 async function Brief({ placeId }: { placeId: string }) {
-  const { place, context, pitch } = await buildBrief(placeId);
-
+  const brief = await buildBrief(placeId);
   return (
     <div className="flex w-full flex-col gap-4">
       <AccountBar />
       <BackButton href="/" />
-      <Card size="3" variant="surface" className="w-full">
-        <div className="flex items-center gap-3.5">
-          {place.photoUrl ? (
-            <Image
-              src={place.photoUrl}
-              alt=""
-              width={56}
-              height={56}
-              className="size-14 shrink-0 rounded-6 object-cover"
-              unoptimized
-              priority
-            />
-          ) : null}
-          <div className="min-w-0">
-            <Heading as="h2" size="5" weight="bold" className="truncate">
-              {place.name}
-            </Heading>
-            <Text as="div" size="2" color="gray" className="mt-0.5 truncate">
-              {[place.category, place.rating && `${place.rating}★`]
-                .filter(Boolean)
-                .join(" · ")}
-            </Text>
-          </div>
-        </div>
-
-        <Separator size="4" className="my-4" />
-
-        <SectionLabel>They&apos;re using</SectionLabel>
-        <StackChips stack={context.stack} />
-
-
-        <Separator size="4" className="my-4" />
-
-        <SectionLabel>What to say</SectionLabel>
-        {/* Three at most. Anyone reading this is standing in front of someone
-            and gets one glance per line. */}
-        <ol className="mt-3 flex flex-col gap-5">
-          {pitch.bullets.slice(0, 3).map((bullet, index) => (
-            <li key={index} className="flex flex-col items-start gap-2">
-              <Text as="div" size="5">
-                {bullet.say}
-              </Text>
-              <Badge size="1" variant="soft" color="blue">
-                {bullet.product}
-              </Badge>
-              <Text as="div" size="2" color="gray">
-                {bullet.how}
-              </Text>
-            </li>
-          ))}
-        </ol>
-
-        <Separator size="4" className="my-4" />
-
-        <SectionLabel>If they push back</SectionLabel>
-        <Text as="div" size="2" color="gray" className="mt-2">
-          &ldquo;{pitch.objection.likely}&rdquo;
-        </Text>
-        <Text as="div" size="4" className="mt-2">
-          {pitch.objection.answer}
-        </Text>
-      </Card>
-
-    </div>
-  );
-}
-
-function StackChips({ stack }: { stack: Stack }) {
-  const all = Object.values(stack).flat();
-  if (all.length === 0) {
-    return (
-      <Text as="div" size="2" color="gray" className="mt-2">
-        Nothing detected — pitch from the category.
-      </Text>
-    );
-  }
-  return (
-    <div className="mt-2.5 flex flex-wrap gap-1.5">
-      {all.map((tool) => (
-        <Badge key={tool} size="2" variant="soft" color="gray">
-          {tool}
-        </Badge>
-      ))}
+      <PitchCard {...brief} />
     </div>
   );
 }

@@ -39,6 +39,19 @@ export const MarketPositionSchema = z.object({
     .nullable(),
   rivalsWithWebsite: z.number(),
 });
+
+/** How a business shows up on the map, and whether it is worth walking into. */
+export const ProspectSchema = z.object({
+  /** Same name repeated nearby — head office decides, not the person behind
+   *  the counter. Deprioritise. */
+  isChain: z.boolean(),
+  /** No site at all: nothing to migrate and the whole stack is net-new. */
+  isOffline: z.boolean(),
+  /** Footfall proxy from reviews and price level. Never a currency amount. */
+  tier: z.enum(["high", "medium", "low"]),
+  reasons: z.array(z.string()),
+});
+export type Prospect = z.infer<typeof ProspectSchema>;
 export type MarketPosition = z.infer<typeof MarketPositionSchema>;
 
 /** The whole context bundle we hand to the model. */
@@ -50,6 +63,7 @@ export const BusinessContextSchema = z.object({
   /** Live web research on each detected tool, so the pitch argues against what
    *  the incumbent actually is rather than what the model remembers. */
   incumbents: z.array(z.string()),
+  prospect: ProspectSchema,
 });
 export type BusinessContext = z.infer<typeof BusinessContextSchema>;
 

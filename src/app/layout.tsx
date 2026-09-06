@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Theme } from "frosted-ui";
 import "./globals.css";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 export const metadata: Metadata = {
   title: "Scout",
@@ -22,9 +23,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body>
         <Theme appearance="light" accentColor="blue" grayColor="gray">
-          <main className="mx-auto flex h-dvh w-full max-w-xl flex-col px-6">
-            {children}
-          </main>
+          <main className="relative h-dvh w-full overflow-hidden">{children}</main>
         </Theme>
       </body>
     </html>
