@@ -7,14 +7,26 @@ function required(name: string): string {
 export const env = {
   googlePlaces: () => required("GOOGLE_PLACES_API_KEY"),
   openRouter: () => required("OPENROUTER_API_KEY"),
+  /** Business-scoped API key. Autopilot runs entirely on this: an account
+   *  created by any other credential is a company the key has no authority
+   *  over. */
+  whopPlatformKey: () => required("WHOP_PLATFORM_API_KEY"),
   whopClientId: () =>
     process.env.WHOP_CLIENT_ID ?? required("NEXT_PUBLIC_WHOP_APP_ID"),
   // Every scope here must ALSO be declared on the app's Permissions tab —
   // asking for one the app has not declared makes Whop reject the authorize.
   oauthScope: () =>
     process.env.WHOP_OAUTH_SCOPE ??
-    "openid profile email partner:create partner:basic:read",
+    "openid profile email partner:create partner:basic:read company:basic:read company:update company:create access_pass:create plan:create",
   appUrl: () => process.env.APP_URL ?? "http://localhost:3001",
+  /** Whop rejects a non-HTTPS return URL on account links, so localhost cannot
+   *  be used in dev. Falls back to the deployed origin. */
+  claimReturnUrl: () => {
+    const url = process.env.CLAIM_RETURN_URL ?? process.env.APP_URL ?? "";
+    return url.startsWith("https://")
+      ? url
+      : "https://whop-affiliates-irl.vercel.app";
+  },
   redirectUri: () =>
     process.env.WHOP_REDIRECT_URI ??
     `${process.env.APP_URL ?? "http://localhost:3001"}/oauth/callback`,

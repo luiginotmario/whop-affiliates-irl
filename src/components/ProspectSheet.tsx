@@ -1,12 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Badge, Button, Heading, Spinner, Text, TextField } from "frosted-ui";
+import {
+  Badge,
+  Button,
+  Heading,
+  Spinner,
+  Switch,
+  Text,
+  TextField,
+} from "frosted-ui";
 import type { Pin } from "@/app/api/prospects/route";
 import { PitchCard, type Brief } from "@/components/PitchCard";
 import { BuildingPitch, type Stage } from "@/components/BuildingPitch";
 import { QrClose } from "@/components/QrClose";
 import { SignInPrompt } from "@/components/SignInPrompt";
+import { Autopilot } from "@/components/Autopilot";
 import { useSheetDrag } from "@/lib/useSheetDrag";
 
 type PartnerState =
@@ -71,6 +80,9 @@ export function ProspectSheet({
   const [loadingBrief, setLoadingBrief] = useState(false);
   const [stage, setStage] = useState<Stage>("lookup");
   const [partner, setPartner] = useState<PartnerState | null>(null);
+  // Off: hand them the QR and let them onboard themselves. On: build the
+  // business server-side and email them an invite to claim it.
+  const [autopilot, setAutopilot] = useState(false);
 
   // A new business invalidates whatever pitch is on screen.
   useEffect(() => {
@@ -237,10 +249,35 @@ export function ProspectSheet({
               <div className="flex flex-col gap-3">
                 <PitchCard {...brief} />
                 {partner?.state === "ready" ? (
-                  <QrClose
-                    qrDataUrl={partner.qrDataUrl}
-                    referralLink={partner.referralLink}
-                  />
+                  <div className="flex flex-col gap-3">
+                    <label className="flex items-center justify-between gap-3">
+                      <span>
+                        <Text as="div" size="2" weight="medium">
+                          Autopilot
+                        </Text>
+                        <Text as="div" size="1" color="gray">
+                          Build their Whop and email them to claim it
+                        </Text>
+                      </span>
+                      <Switch
+                        size="2"
+                        checked={autopilot}
+                        onCheckedChange={setAutopilot}
+                      />
+                    </label>
+
+                    {autopilot ? (
+                      <Autopilot
+                        placeId={selected.id}
+                        businessName={selected.name}
+                      />
+                    ) : (
+                      <QrClose
+                        qrDataUrl={partner.qrDataUrl}
+                        referralLink={partner.referralLink}
+                      />
+                    )}
+                  </div>
                 ) : partner ? (
                   <SignInPrompt
                     next={`/?place=${encodeURIComponent(selected.id)}&pitch=1`}

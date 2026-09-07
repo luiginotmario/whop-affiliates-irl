@@ -9,27 +9,43 @@ import { Button, Dialog, Text } from "frosted-ui";
 export function QrClose({
   qrDataUrl,
   referralLink,
+  title = "Scan to join Whop",
+  description = "They scan, they onboard, you get credited.",
+  triggerLabel = "Show your QR",
+  open,
+  onOpenChange,
 }: {
   qrDataUrl: string;
   referralLink: string;
+  title?: string;
+  description?: string;
+  triggerLabel?: string;
+  /** Omit for the default trigger-button form; pass to drive it yourself,
+   *  which is how Autopilot opens it straight after building. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
+  const controlled = open !== undefined;
+
   return (
-    <Dialog.Root>
-      <Dialog.Trigger>
-        <Button
-          size="4"
-          variant="solid"
-          color="blue"
-          className="w-full transition-transform duration-150 active:scale-[0.98]"
-        >
-          Show your QR
-        </Button>
-      </Dialog.Trigger>
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      {controlled ? null : (
+        <Dialog.Trigger>
+          <Button
+            size="4"
+            variant="solid"
+            color="blue"
+            className="w-full transition-transform duration-150 active:scale-[0.98]"
+          >
+            {triggerLabel}
+          </Button>
+        </Dialog.Trigger>
+      )}
       <Dialog.Content className="max-w-sm">
-        <Dialog.Title>Scan to join Whop</Dialog.Title>
+        <Dialog.Title>{title}</Dialog.Title>
         <Dialog.Description>
           <Text size="2" color="gray">
-            They scan, they onboard, you get credited.
+            {description}
           </Text>
         </Dialog.Description>
 
@@ -37,7 +53,7 @@ export function QrClose({
           <div className="rounded-6 bg-white p-3">
             <Image
               src={qrDataUrl}
-              alt="Your Whop partner referral QR code"
+              alt={title}
               width={240}
               height={240}
               unoptimized
