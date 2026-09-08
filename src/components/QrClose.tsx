@@ -8,7 +8,6 @@ import { Button, Dialog, Text } from "frosted-ui";
  *  screen that must never fail. */
 export function QrClose({
   qrDataUrl,
-  referralLink,
   title = "Scan to join Whop",
   description = "They scan, they onboard, you get credited.",
   triggerLabel = "Show your QR",
@@ -16,7 +15,6 @@ export function QrClose({
   onOpenChange,
 }: {
   qrDataUrl: string;
-  referralLink: string;
   title?: string;
   description?: string;
   triggerLabel?: string;
@@ -61,10 +59,6 @@ export function QrClose({
             />
           </div>
         </div>
-
-        <Text as="div" size="1" color="gray" align="center" className="break-all">
-          {referralLink}
-        </Text>
 
         <div className="mt-5">
           <Dialog.Close>

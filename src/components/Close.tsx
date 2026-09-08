@@ -26,6 +26,6 @@ export async function Close({ next }: { next: string }) {
   });
 
   return (
-    <QrClose qrDataUrl={qrDataUrl} referralLink={partner.referral_link} />
+    <QrClose qrDataUrl={qrDataUrl} />
   );
 }
