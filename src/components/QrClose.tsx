@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import { Button, Dialog, Text } from "frosted-ui";
+import { CopyLink } from "@/components/CopyLink";
 
 /** The close. The QR is rendered server-side and inlined as a data URL, so it
  *  opens with no network — shop wifi is usually unusable and this is the one
  *  screen that must never fail. */
 export function QrClose({
   qrDataUrl,
+  link,
   title = "Scan to join Whop",
   description = "They scan, they onboard, you get credited.",
   triggerLabel = "Show your QR",
@@ -15,6 +17,8 @@ export function QrClose({
   onOpenChange,
 }: {
   qrDataUrl: string;
+  /** The URL the QR encodes. Only used for the copy button. */
+  link?: string;
   title?: string;
   description?: string;
   triggerLabel?: string;
@@ -60,7 +64,9 @@ export function QrClose({
           </div>
         </div>
 
-        <div className="mt-5">
+        {link ? <CopyLink url={link} /> : null}
+
+        <div className="mt-3">
           <Dialog.Close>
             <Button size="3" variant="soft" color="gray" className="w-full">
               Done

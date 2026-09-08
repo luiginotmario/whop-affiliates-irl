@@ -54,6 +54,7 @@ export function Autopilot({
         </Button>
         <QrClose
           qrDataUrl={claim.qr}
+          link={claim.url}
           title={`${businessName} is built`}
           description="They scan, verify who they are, and it's theirs. You're recorded as the partner who referred them."
           open={showQr}

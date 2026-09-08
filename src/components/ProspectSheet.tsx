@@ -274,6 +274,7 @@ export function ProspectSheet({
                     ) : (
                       <QrClose
                         qrDataUrl={partner.qrDataUrl}
+                        link={partner.referralLink}
                       />
                     )}
                   </div>
