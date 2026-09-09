@@ -62,7 +62,7 @@ export const buildContext = unstable_cache(gatherContext, ["context", CONTEXT_VE
 });
 
 /** Bump when the Pitch schema or the prompt changes. */
-const PITCH_VERSION = "v6-pitch";
+const PITCH_VERSION = "v7-no-objection";
 
 /** The generated pitch, cached by business. Without this the model re-runs on
  *  every view — 25s each time, and different words each time, which is worse

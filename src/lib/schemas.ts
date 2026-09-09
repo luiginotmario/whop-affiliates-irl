@@ -93,9 +93,5 @@ export const PitchSchema = z.object({
         ),
     }),
   ),
-  objection: z.object({
-    likely: z.string().describe("The objection, max 10 words."),
-    answer: z.string().describe("Your reply, max 20 words. Spoken."),
-  }),
 });
 export type Pitch = z.infer<typeof PitchSchema>;

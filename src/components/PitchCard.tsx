@@ -65,15 +65,6 @@ export function PitchCard({ place, context, pitch }: Brief) {
         ))}
       </ol>
 
-      <Separator size="4" className="my-4" />
-
-      <SectionLabel>If they push back</SectionLabel>
-      <Text as="div" size="2" color="gray" className="mt-2">
-        &ldquo;{pitch.objection.likely}&rdquo;
-      </Text>
-      <Text as="div" size="4" className="mt-2">
-        {pitch.objection.answer}
-      </Text>
     </Card>
   );
 }
