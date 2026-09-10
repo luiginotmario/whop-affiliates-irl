@@ -42,7 +42,9 @@ body {
   z-index: 10;
   display: flex;
   justify-content: center;
-  padding: 0 0.75rem;
+  /* Flush to the edges on a phone: a bottom sheet is full-bleed. The desktop
+     query below insets it, because there it is a floating panel. */
+  padding: 0;
   pointer-events: none;
 }
 
